@@ -1,0 +1,7 @@
+[
+  {"key":"admin","title":"مدیر","permissions":["*"],"system":true},
+  {"key":"employee","title":"کارمند","permissions":["users.view","courses.view","contacts.view"],"system":false},
+  {"key":"teacher","title":"مدرس","permissions":["profile.edit","courses.manage","students.view","messages.manage"],"system":false},
+  {"key":"team","title":"عضو تیم","permissions":["profile.edit"],"system":false},
+  {"key":"user","title":"کاربر","permissions":["profile.edit","courses.view"],"system":true}
+]

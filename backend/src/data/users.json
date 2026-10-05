@@ -1,0 +1,99 @@
+[
+  {
+    "id": "u1",
+    "name": "مدیر سیستم",
+    "email": "admin@codesazan.local",
+    "passwordHash": "5618dfd770a01044d1e52cadc50bb975796558476505190ff4f2251e7d315aba",
+    "role": "admin",
+    "username": "admin",
+    "phone": "09120000000",
+    "permissions": [
+      "*"
+    ],
+    "status": "active",
+    "profile": {}
+  },
+  {
+    "id": "u2",
+    "name": "مدرس نمونه",
+    "email": "teacher@codesazan.local",
+    "passwordHash": "61ae51cb5f3128872604a676d95491b82b228e9e5181135fc77f8e8e0e683108",
+    "role": "teacher",
+    "username": "teacher",
+    "phone": "09120000000",
+    "permissions": [
+      "profile.edit",
+      "courses.manage",
+      "students.view",
+      "messages.manage"
+    ],
+    "status": "active",
+    "profile": {}
+  },
+  {
+    "id": "u_employee",
+    "username": "employee",
+    "name": "کارمند نمونه",
+    "email": "employee@codesazan.local",
+    "phone": "09120000000",
+    "passwordHash": "3d52b3fe63098f5c5ccc6baa914975bfbfa9e962d38dd6b4e5533ff048d0806f",
+    "role": "employee",
+    "permissions": [
+      "users.view",
+      "courses.view",
+      "contacts.view"
+    ],
+    "status": "active",
+    "profile": {
+      "bio": "",
+      "experience": "",
+      "education": "",
+      "skills": [],
+      "photo": "",
+      "resume": ""
+    }
+  },
+  {
+    "id": "u_team",
+    "username": "team",
+    "name": "عضو تیم نمونه",
+    "email": "team@codesazan.local",
+    "phone": "09120000000",
+    "passwordHash": "16949f053e18eb0c071ad87a151a4d18ca705167646ad3ea50cba7e9cc700f88",
+    "role": "team",
+    "permissions": [
+      "profile.edit"
+    ],
+    "status": "active",
+    "profile": {
+      "bio": "",
+      "experience": "",
+      "education": "",
+      "skills": [],
+      "photo": "",
+      "resume": ""
+    }
+  },
+  {
+    "id": "u_user",
+    "username": "user",
+    "name": "کاربر نمونه",
+    "email": "user@codesazan.local",
+    "phone": "09120000000",
+    "passwordHash": "27573400175957fd39d64e3fe0898cf3f0399d437503d5495af41b71ad63d0ea",
+    "role": "user",
+    "permissions": [
+      "profile.edit",
+      "courses.view"
+    ],
+    "status": "active",
+    "profile": {
+      "bio": "",
+      "experience": "",
+      "education": "",
+      "skills": [],
+      "photo": "",
+      "resume": ""
+    }
+  }
+]

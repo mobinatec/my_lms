@@ -1,0 +1,60 @@
+services:
+  postgres:
+    restart: always
+    read_only: false
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+
+  redis:
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+
+  bootstrap:
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    environment:
+      IMAGE_MAX_UPLOAD_BYTES: ${IMAGE_MAX_UPLOAD_BYTES:-10485760}
+      FILE_MAX_UPLOAD_BYTES: ${FILE_MAX_UPLOAD_BYTES:-26214400}
+      INTEGRATION_CONFIG_KEY: ${INTEGRATION_CONFIG_KEY:?Set INTEGRATION_CONFIG_KEY in .env}
+    volumes:
+      - ${DATA_ROOT:-../codesazan-production-data}/media:/app/media
+
+  media-worker:
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    tmpfs:
+      - /tmp:size=256m
+    volumes:
+      - ${DATA_ROOT:-../codesazan-production-data}/media:/app/media
+
+  notification-worker:
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+
+  frontend:
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+
+  edge:
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256

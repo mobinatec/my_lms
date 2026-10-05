@@ -1,0 +1,14 @@
+const express=require('express');const auth=require('../../middlewares/adminAuth');const p=auth.requirePermission;const s=require('./tickets.service');const r=express.Router();r.use(auth);
+r.get('/categories',p('tickets.view'),async(req,res,next)=>{try{res.json({success:true,data:await s.categories(req.adminUser?.role==='admin')})}catch(e){next(e)}});
+r.post('/categories',p('tickets.manage'),async(req,res,next)=>{try{res.status(201).json({success:true,data:await s.createCategory(req.body||{})})}catch(e){next(e)}});
+r.put('/categories/:id',p('tickets.manage'),async(req,res,next)=>{try{const x=await s.updateCategory(req.params.id,req.body||{});if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})}catch(e){next(e)}});
+r.delete('/categories/:id',p('tickets.manage'),async(req,res,next)=>{try{res.json({success:await s.removeCategory(req.params.id)})}catch(e){next(e)}});
+r.get('/',p('tickets.view'),async(req,res,next)=>{try{res.json({success:true,data:await s.list()})}catch(e){next(e)}});
+r.get('/:id',p('tickets.view'),async(req,res,next)=>{try{const x=await s.get(req.params.id);if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})}catch(e){next(e)}});
+r.post('/',p('tickets.create'),async(req,res,next)=>{try{res.status(201).json({success:true,data:await s.create(req.body||{},req.adminUser)})}catch(e){next(e)}});
+r.put('/:id',p('tickets.manage'),async(req,res,next)=>{try{const x=await s.update(req.params.id,req.body||{},req.adminUser);if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})}catch(e){next(e)}});
+r.post('/:id/close',p('tickets.close'),async(req,res,next)=>{try{const x=await s.close(req.params.id,req.adminUser);if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})}catch(e){next(e)}});
+r.post('/:id/reply',p('tickets.reply'),async(req,res,next)=>{try{res.status(201).json({success:true,data:await s.reply(req.params.id,{...req.body,internal:false},req.adminUser)})}catch(e){next(e)}});
+r.post('/:id/internal-reply',p('tickets.internal_reply'),async(req,res,next)=>{try{res.status(201).json({success:true,data:await s.reply(req.params.id,{...req.body,internal:true},req.adminUser)})}catch(e){next(e)}});
+r.delete('/:id',p('tickets.delete'),async(req,res,next)=>{try{res.json({success:await s.remove(req.params.id)})}catch(e){next(e)}});
+module.exports=r;

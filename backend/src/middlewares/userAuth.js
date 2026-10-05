@@ -1,0 +1,2 @@
+const auth=require('../modules/auth/auth.service');
+module.exports=async(req,res,next)=>{try{const u=await auth.me((req.headers.authorization||'').replace(/^Bearer\s+/,''));if(!u)return res.status(401).json({success:false,message:'ابتدا وارد شوید'});if(u.status==='suspended')return res.status(403).json({success:false,message:'حساب کاربری شما تعلیق شده است',reason:u.suspensionReason||'',until:u.suspendedUntil||null});req.user=u;next()}catch(e){next(e)}};

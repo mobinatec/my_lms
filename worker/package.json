@@ -1,0 +1,11 @@
+{
+  "name": "codesazan-media-worker",
+  "version": "1.1.0",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "redis": "5.8.2",
+    "pg": "8.16.3"
+  },
+  "scripts": {}
+}

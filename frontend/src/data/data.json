@@ -1,0 +1,95 @@
+[
+  {
+    "id": "p1",
+    "title": "فروشگاه اینترنتی چندفروشندگی",
+    "category": "web",
+    "client": "دیجی‌بازار",
+    "summary": "پلتفرم فروشگاهی با پنل فروشندگان، پرداخت آنلاین و مدیریت انبار هوشمند.",
+    "stack": [
+      "React",
+      "Node.js",
+      "PostgreSQL",
+      "Redis"
+    ],
+    "year": 1402,
+    "accent": "#22d3ee",
+    "images": [
+      "/project-demo/gallery-1.jpg",
+      "/project-demo/gallery-2.jpg",
+      "/project-demo/gallery-3.jpg",
+      "/project-demo/gallery-4.jpg"
+    ],
+    "demoVideo": "/project-demo/default-demo.mp4",
+    "demoUrl": "#"
+  },
+  {
+    "id": "p2",
+    "title": "سامانه مدیریت کلینیک",
+    "category": "web",
+    "client": "کلینیک آرمان",
+    "summary": "نوبت‌دهی آنلاین، پرونده الکترونیک بیمار و داشبورد گزارش‌گیری برای پزشکان.",
+    "stack": [
+      "Vue.js",
+      "Laravel",
+      "MySQL"
+    ],
+    "year": 1401,
+    "accent": "#a78bfa"
+  },
+  {
+    "id": "p3",
+    "title": "اپلیکیشن بانکداری موبایل",
+    "category": "mobile",
+    "client": "بانک نوین",
+    "summary": "طراحی و توسعه رابط کاربری اپ بانکی با احراز هویت بیومتریک و انتقال آنی وجه.",
+    "stack": [
+      "React Native",
+      "NestJS",
+      "MongoDB"
+    ],
+    "year": 1403,
+    "accent": "#facc15"
+  },
+  {
+    "id": "p4",
+    "title": "پلتفرم آموزش آنلاین (LMS)",
+    "category": "web",
+    "client": "آکادمی مهارت",
+    "summary": "سامانه برگزاری دوره، پخش ویدیو، آزمون آنلاین و صدور گواهی دیجیتال.",
+    "stack": [
+      "Next.js",
+      "Node.js",
+      "PostgreSQL"
+    ],
+    "year": 1402,
+    "accent": "#34d399"
+  },
+  {
+    "id": "p5",
+    "title": "وب‌سایت شرکتی هلدینگ صنعتی",
+    "category": "corporate",
+    "client": "گروه صنعتی پارسیان",
+    "summary": "وب‌سایت چندزبانه معرفی شرکت با مدیریت محتوای اختصاصی و بهینه‌سازی سئو.",
+    "stack": [
+      "React",
+      "Express",
+      "Strapi"
+    ],
+    "year": 1401,
+    "accent": "#fb7185"
+  },
+  {
+    "id": "p6",
+    "title": "سامانه سفارش آنلاین رستوران",
+    "category": "web",
+    "client": "زنجیره رستوران‌های بامیلو",
+    "summary": "سفارش‌گیری آنلاین، مدیریت شعب و اتصال به دستگاه‌های پرینتر آشپزخانه.",
+    "stack": [
+      "React",
+      "Node.js",
+      "Socket.io"
+    ],
+    "year": 1403,
+    "accent": "#60a5fa"
+  }
+]

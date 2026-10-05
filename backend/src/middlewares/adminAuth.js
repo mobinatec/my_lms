@@ -1,0 +1,5 @@
+const auth=require('../modules/auth/auth.service');
+function hasPermission(user,key){if(!user)return false;const permissions=Array.isArray(user.permissions)?user.permissions:[];return user.role==='admin'||permissions.includes('*')||permissions.includes(key)}
+module.exports=async function adminAuth(req,res,next){try{const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'').trim();if(!token)return res.status(401).json({success:false,message:'احراز هویت مدیریت لازم است'});const user=await auth.me(token);if(!user)return res.status(401).json({success:false,message:'نشست مدیریت منقضی یا نامعتبر است'});if(user.status==='suspended')return res.status(403).json({success:false,message:'حساب کاربری تعلیق شده است'});req.adminUser=user;next()}catch(e){next(e)}};
+module.exports.hasPermission=hasPermission;
+module.exports.requirePermission=key=>(req,res,next)=>{if(hasPermission(req.adminUser,key))return next();return res.status(403).json({success:false,message:'برای این عملیات دسترسی لازم را ندارید',requiredPermission:key})};

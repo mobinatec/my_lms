@@ -1,0 +1,22 @@
+# Production Final-Candidate Checklist — v6.1.5.2
+
+- [x] PostgreSQL + Redis architecture
+- [x] Docker Compose production configuration
+- [x] Backend health/readiness infrastructure
+- [x] RBAC and admin separation
+- [x] CRM / tickets / contracts
+- [x] Notification hub
+- [x] Payment/gateway hub
+- [x] Media upload limits and media volume architecture
+- [x] Favicon/site icon settings support
+- [x] Git ignore / environment secret exclusion
+- [x] GitHub CI workflow
+- [x] GitHub production CD workflow
+- [x] Deployment health check
+- [x] Automatic rollback on deployment failure
+- [x] Production version marker updated to 6.1.5.2
+- [ ] Generate and commit package-lock.json files from a network-enabled npm environment
+- [ ] Run full Docker Compose build on the target Windows/Docker Desktop environment
+- [ ] Configure GitHub `production` environment secrets
+- [ ] Configure HTTPS/domain/reverse proxy certificates on the VPS
+- [ ] Execute final smoke test against the real deployment

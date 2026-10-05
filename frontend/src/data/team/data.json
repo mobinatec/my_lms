@@ -1,0 +1,62 @@
+[
+  {
+    "id": "t1",
+    "name": "آرمان رضایی",
+    "role": "مدیر فنی و معمار نرم‌افزار",
+    "bio": "معمار محصولات وب و سیستم‌های مقیاس‌پذیر با تمرکز بر معماری ماژولار و زیرساخت.",
+    "experience": "۱۰+ سال",
+    "skills": [
+      "Node.js",
+      "React",
+      "Docker",
+      "System Design"
+    ],
+    "education": "مهندسی نرم‌افزار",
+    "accent": "#22d3ee"
+  },
+  {
+    "id": "t2",
+    "name": "سارا احمدی",
+    "role": "Product Designer / UI UX",
+    "bio": "طراح محصول با تمرکز بر تجربه کاربری، Design System و تبدیل نیازهای پیچیده به رابط‌های ساده.",
+    "experience": "۷+ سال",
+    "skills": [
+      "Figma",
+      "UX Research",
+      "Design System",
+      "Prototyping"
+    ],
+    "education": "طراحی صنعتی",
+    "accent": "#a78bfa"
+  },
+  {
+    "id": "t3",
+    "name": "امیرحسین کاظمی",
+    "role": "Senior Frontend Developer",
+    "bio": "توسعه‌دهنده فرانت‌اند و متخصص React که روی رابط‌های سریع، دسترس‌پذیر و دقیق کار می‌کند.",
+    "experience": "۶+ سال",
+    "skills": [
+      "React",
+      "TypeScript",
+      "Vite",
+      "Testing"
+    ],
+    "education": "مهندسی کامپیوتر",
+    "accent": "#34d399"
+  },
+  {
+    "id": "t4",
+    "name": "نگار محمدی",
+    "role": "Backend & DevOps Engineer",
+    "bio": "متخصص سرویس‌های بک‌اند، CI/CD و استقرار امن محصولات در محیط‌های ابری و کانتینری.",
+    "experience": "۸+ سال",
+    "skills": [
+      "Node.js",
+      "PostgreSQL",
+      "CI/CD",
+      "Kubernetes"
+    ],
+    "education": "مهندسی فناوری اطلاعات",
+    "accent": "#fb7185"
+  }
+]

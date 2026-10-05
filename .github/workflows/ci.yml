@@ -1,0 +1,58 @@
+name: codesazan-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install backend
+        working-directory: backend
+        run: npm install --no-audit --no-fund
+      - name: Backend tests
+        working-directory: backend
+        run: npm test
+      - name: Backend and worker syntax
+        shell: bash
+        run: |
+          set -e
+          find backend/src worker/src notification-worker/src -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Install frontend
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Frontend build
+        working-directory: frontend
+        run: npm run build
+      - name: Prepare CI environment
+        shell: bash
+        run: |
+          cat > .env <<'ENV'
+          POSTGRES_DB=codesazan_ci
+          POSTGRES_USER=codesazan_ci
+          POSTGRES_PASSWORD=ci-only-password-123456789
+          AUTH_SECRET=ci-only-auth-secret-123456789012345678901234567890
+          ADMIN_PASSWORD=ci-only-admin-password-123456789
+          ADMIN_PASSWORD_HASH=
+          INTEGRATION_CONFIG_KEY=ci-only-integration-key-123456789012345678901234567890
+          PUBLIC_BASE_URL=http://localhost
+          IMAGE_MAX_UPLOAD_BYTES=10485760
+          FILE_MAX_UPLOAD_BYTES=26214400
+          ENV
+      - name: Compose validation
+        run: docker compose -f docker-compose.yml -f docker-compose.production.yml config
+      - name: Docker production build
+        run: docker compose -f docker-compose.yml -f docker-compose.production.yml build
+      - name: Remove CI environment
+        if: always()
+        run: rm -f .env
+      - name: Secret scan
+        shell: bash
+        run: |
+          ! grep -RInE 'ChangeMe123|admin/admin|demo/demo|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|AKIA[0-9A-Z]{16}' \
+            --exclude-dir=.git --exclude='*.md' --exclude='*.txt' .

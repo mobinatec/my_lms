@@ -1,0 +1,10 @@
+const express=require('express');const auth=require('../../middlewares/adminAuth');const p=auth.requirePermission;const s=require('./crm.service');const r=express.Router();r.use(auth);
+r.get('/dashboard',p('crm.reports'),async(req,res,next)=>{try{res.json({success:true,data:await s.dashboard()})}catch(e){next(e)}});
+r.get('/:id/timeline',p('crm.view'),async(req,res,next)=>{try{res.json({success:true,data:await s.timeline(req.params.id)})}catch(e){next(e)}});
+r.get('/',p('crm.view'),async(req,res,next)=>{try{res.json({success:true,data:await s.list()})}catch(e){next(e)}});
+r.post('/',p('crm.create'),async(req,res,next)=>{try{res.status(201).json({success:true,data:await s.create(req.body||{},req.adminUser)})}catch(e){next(e)}});
+r.put('/:id',p('crm.edit'),async(req,res,next)=>{try{const x=await s.update(req.params.id,req.body||{},req.adminUser);if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})}catch(e){next(e)}});
+r.delete('/:id',p('crm.delete'),async(req,res,next)=>{try{res.json({success:await s.remove(req.params.id)})}catch(e){next(e)}});
+r.get('/:id/activities',p('crm.activities'),async(req,res,next)=>{try{res.json({success:true,data:await s.activities(req.params.id)})}catch(e){next(e)}});
+r.post('/:id/activities',p('crm.activities'),async(req,res,next)=>{try{res.status(201).json({success:true,data:await s.addActivity(req.params.id,req.body||{},req.adminUser)})}catch(e){next(e)}});
+module.exports=r;

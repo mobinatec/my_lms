@@ -1,0 +1,560 @@
+--- backend/src/modules/admin/admin.controller.js
+const asyncHandler=require('../../utils/asyncHandler');
+const s=require('./admin.service');
+const adminStore=require('./admin.service');
+const portfolio=adminStore.portfolio;
+const team=adminStore.team;
+const services=adminStore.services;
+const blog=adminStore.blog;
+const coursesService=require('../courses/courses.service');
+const mediaAdmin=require('../media/admin.service');
+const notifyAdmin=require('./notifications.admin');
+const resource=(service)=>({
+ list:asyncHandler(async(req,res)=>res.json({success:true,data:await (service.getAll?service.getAll(req.query||{}):service.all())})),
+ create:asyncHandler(async(req,res)=>res.status(201).json({success:true,data:await service.create(req.body||{})})),
+ update:asyncHandler(async(req,res)=>{const x=await service.update(req.params.id,req.body||{});if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})}),
+ remove:asyncHandler(async(req,res)=>{if(!(await service.remove(req.params.id)))return res.status(404).json({success:false});res.json({success:true})})
+});
+const analyticsStats=asyncHandler(async(req,res)=>res.json({success:true,data:await s.analyticsStats()}));
+const auditLogs=asyncHandler(async(req,res)=>res.json({success:true,data:await s.auditLogs()}));
+const subscriptions=asyncHandler(async(req,res)=>res.json({success:true,data:await s.subscriptionsAll()}));
+const orders=asyncHandler(async(req,res)=>res.json({success:true,data:await s.ordersAll()}));
+const updateOrder=asyncHandler(async(req,res)=>res.json({success:true,data:await s.updateOrderStatus(req.params.id,req.body||{})}));
+const permissions=asyncHandler(async(req,res)=>res.json({success:true,data:await s.permissions()}));
+const roles=asyncHandler(async(req,res)=>res.json({success:true,data:await s.roles()}));
+const createRole=asyncHandler(async(req,res)=>res.status(201).json({success:true,data:await s.createRole(req.body||{})}));
+const updateRole=asyncHandler(async(req,res)=>{const x=await s.updateRole(req.params.key,req.body||{});if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})});
+const deleteRole=asyncHandler(async(req,res)=>{if(!(await s.deleteRole(req.params.key)))return res.status(400).json({success:false,message:'نقش سیستمی یا ناموجود است'});res.json({success:true})});
+const enrollmentDetails=asyncHandler(async(req,res)=>res.json({success:true,data:await s.enrollmentDetails()}));
+const reviews=asyncHandler(async(req,res)=>res.json({success:true,data:await s.reviews()}));
+const updateReview=asyncHandler(async(req,res)=>{const x=await s.updateReview(req.params.id,req.body||{});if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})});
+const dashboard=asyncHandler(async(req,res)=>res.json({success:true,data:await s.dashboard()}));
+const contacts=asyncHandler(async(req,res)=>res.json({success:true,data:await s.contacts()}));
+const courses={
+ list:asyncHandler(async(req,res)=>res.json({success:true,data:await coursesService.getAll(req.query||{})})),
+ create:asyncHandler(async(req,res)=>res.status(201).json({success:true,data:await coursesService.create(req.body||{})})),
+ update:asyncHandler(async(req,res)=>{const x=await coursesService.update(req.params.id,req.body||{});if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})}),
+ remove:asyncHandler(async(req,res)=>{if(!(await coursesService.remove(req.params.id)))return res.status(404).json({success:false});res.json({success:true})})
+};
+const media={
+  list:asyncHandler(async(req,res)=>res.json({success:true,data:await mediaAdmin.list()})),
+  retry:asyncHandler(async(req,res)=>res.json({success:true,data:await mediaAdmin.retry(req.params.id,req.adminUser)})),
+  attach:asyncHandler(async(req,res)=>res.json({success:true,data:await mediaAdmin.attach(req.params.id,req.body?.lessonId,req.adminUser)})),
+  remove:asyncHandler(async(req,res)=>res.json({success:true,data:await mediaAdmin.remove(req.params.id,req.adminUser)}))
+};
+const plans=asyncHandler(async(req,res)=>res.json({success:true,data:await s.subscriptionsPlans()}));
+const updatePlan=asyncHandler(async(req,res)=>{try{const x=await s.updatePlan(req.params.courseId,req.params.key,req.body||{});res.json({success:true,data:x})}catch(e){res.status(400).json({success:false,message:e.message})}});
+const createPlan=asyncHandler(async(req,res)=>{try{const x=await s.createPlan(req.params.courseId,req.body||{});res.status(201).json({success:true,data:x})}catch(e){res.status(400).json({success:false,message:e.message})}});
+const deletePlan=asyncHandler(async(req,res)=>{if(!(await s.deletePlan(req.params.courseId,req.params.key)) )return res.status(404).json({success:false});res.json({success:true})});
+const loyalty=asyncHandler(async(req,res)=>res.json({success:true,data:{accounts:await notifyAdmin.accounts(),tiers:await notifyAdmin.tiers()}}));
+const loyaltyAdjust=asyncHandler(async(req,res)=>res.json({success:true,data:await notifyAdmin.adjust(req.params.userId,req.body?.points,req.body?.description||'اصلاح امتیاز توسط مدیر')}));
+const notifications=asyncHandler(async(req,res)=>res.json({success:true,data:{items:await notifyAdmin.notificationList(req.query?.status),stats:await notifyAdmin.notificationStats()}}));
+const notificationRules=asyncHandler(async(req,res)=>res.json({success:true,data:await require('../notifications/notifications.service').rules()}));
+const updateNotificationRule=asyncHandler(async(req,res)=>{const x=await require('../notifications/notifications.service').updateRule(req.params.key,req.body||{});if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})});
+const notificationProviders=asyncHandler(async(req,res)=>res.json({success:true,data:await require('../notifications/notifications.service').providers()}));
+const updateNotificationProvider=asyncHandler(async(req,res)=>res.json({success:true,data:await require('../notifications/notifications.service').saveProvider(req.params.key,req.body||{})}));
+const paymentProviders=notificationProviders;
+const sendEmail=asyncHandler(async(req,res)=>{const {recipient,subject,body}=req.body||{};const recipients=String(recipient||'').split(/[;,\s]+/).map(x=>x.trim()).filter(Boolean);if(!recipients.length||!subject||!body)return res.status(400).json({success:false,message:'گیرنده، موضوع و متن ایمیل الزامی است'});const items=[];for(const to of recipients)items.push(await require('../notifications/notifications.service').queue({channel:'email',eventKey:'admin.compose.email',recipient:to,subject,body,data:{sentBy:req.adminUser?.id||null}}));res.status(201).json({success:true,data:items});});
+const siteSettings=asyncHandler(async(req,res)=>res.json({success:true,data:await s.siteSettings.get()}));
+const updateSiteSettings=asyncHandler(async(req,res)=>res.json({success:true,data:await s.siteSettings.update(req.body||{})}));
+const createUser=asyncHandler(async(req,res)=>res.status(201).json({success:true,data:await s.createUser(req.body||{})}));
+const updateUser=asyncHandler(async(req,res)=>{const x=await s.updateUser(req.params.id,req.body||{});if(!x)return res.status(404).json({success:false});res.json({success:true,data:x})});
+module.exports={dashboard,orders,updateOrder,media,loyalty,loyaltyAdjust,notifications,notificationRules,updateNotificationRule,notificationProviders,updateNotificationProvider,paymentProviders,sendEmail,siteSettings,updateSiteSettings,analyticsStats,auditLogs,subscriptions,enrollmentDetails,reviews,updateReview,permissions,roles,createRole,updateRole,deleteRole,plans,updatePlan,createPlan,deletePlan,createUser,updateUser,contacts,portfolio:resource(portfolio),team:resource(team),services:resource(services),blog:resource(blog),courses,users:asyncHandler(async(req,res)=>res.json({success:true,data:await s.users()})),messages:asyncHandler(async(req,res)=>res.json({success:true,data:await s.learning.messages()}))};
+--- backend/src/modules/admin/admin.routes.js
+const express=require('express');
+const c=require('./admin.controller');
+const auth=require('../../middlewares/adminAuth');
+const p=auth.requirePermission;
+const r=express.Router();
+r.use(auth);
+
+r.get('/dashboard',p('dashboard.view'),c.dashboard);
+r.get('/site-settings',p('site-settings.manage'),c.siteSettings);
+r.put('/site-settings',p('site-settings.manage'),c.updateSiteSettings);
+r.get('/analytics',p('analytics.view'),c.analyticsStats);
+r.get('/audit-log',p('audit.view'),c.auditLogs);
+r.get('/subscriptions',p('subscriptions.view'),c.subscriptions);
+r.get('/orders',p('orders.view'),c.orders);
+r.put('/orders/:id/status',p('orders.manage'),c.updateOrder);
+r.get('/plans',p('plans.manage'),c.plans);
+r.post('/plans/:courseId',p('plans.manage'),c.createPlan);
+r.put('/plans/:courseId/:key',p('plans.manage'),c.updatePlan);
+r.delete('/plans/:courseId/:key',p('plans.manage'),c.deletePlan);
+r.get('/enrollments',p('students.view'),c.enrollmentDetails);
+r.get('/reviews',p('reviews.view'),c.reviews);
+r.put('/reviews/:id',p('reviews.manage'),c.updateReview);
+r.get('/permissions',p('permissions.view'),c.permissions);
+r.get('/roles',p('roles.view'),c.roles);
+r.post('/roles',p('roles.manage'),c.createRole);
+r.put('/roles/:key',p('roles.manage'),c.updateRole);
+r.delete('/roles/:key',p('roles.manage'),c.deleteRole);
+r.get('/contacts',p('contacts.view'),c.contacts);
+r.get('/users',p('users.view'),c.users);
+r.post('/users',p('users.manage'),c.createUser);
+r.put('/users/:id',p('users.manage'),c.updateUser);
+r.get('/messages',p('messages.manage'),c.messages);
+for(const [n,perm] of [['portfolio','portfolio.manage'],['team','team.manage'],['services','services.manage'],['blog','blog.manage']]){
+  r.get(`/${n}`,p(perm),c[n].list);r.post(`/${n}`,p(perm),c[n].create);r.put(`/${n}/:id`,p(perm),c[n].update);r.delete(`/${n}/:id`,p(perm),c[n].remove);
+}
+r.get('/media',p('lessons.manage'),c.media.list);
+r.get('/loyalty',p('users.view'),c.loyalty);
+r.put('/loyalty/:userId',p('users.manage'),c.loyaltyAdjust);
+r.get('/notifications',p('messages.manage'),c.notifications);
+r.get('/notification-rules',p('messages.manage'),c.notificationRules);
+r.put('/notification-rules/:key',p('messages.manage'),c.updateNotificationRule);
+r.get('/notification-providers',p('messages.manage'),c.notificationProviders);
+r.put('/notification-providers/:key',p('messages.manage'),c.updateNotificationProvider);
+r.post('/communications/email',p('messages.manage'),c.sendEmail);
+r.post('/media/:id/retry',p('lessons.manage'),c.media.retry);
+r.put('/media/:id/attach',p('lessons.manage'),c.media.attach);
+r.delete('/media/:id',p('lessons.manage'),c.media.remove);
+r.get('/courses',p('courses.view'),c.courses.list);
+r.post('/courses',p('courses.manage'),c.courses.create);
+r.put('/courses/:id',p('courses.manage'),c.courses.update);
+r.delete('/courses/:id',p('courses.manage'),c.courses.remove);
+module.exports=r;
+--- backend/src/modules/admin/admin.service.js
+const learning=require('../learning/learning.service');const contentStore=require('../../db/contentStore');const auth=require('../auth/auth.service');const analytics=require('../analytics/analytics.service');const subscriptions=require('../subscriptions/subscriptions.service');const siteSettings=require('../siteSettings/siteSettings.service');
+const {getPool}=require('../../infra/database');
+const portfolio={all:()=>contentStore.all('portfolio'),create:x=>contentStore.save('portfolio',{...x,id:x.id||`p_${Date.now()}`}),update:async(id,x)=>{const old=await contentStore.get('portfolio',id);return old?contentStore.save('portfolio',{...old,...x,id}):null},remove:id=>contentStore.remove('portfolio',id)};
+const team={all:()=>contentStore.all('team'),create:x=>contentStore.save('team',{...x,id:x.id||`t_${Date.now()}`}),update:async(id,x)=>{const old=await contentStore.get('team',id);return old?contentStore.save('team',{...old,...x,id}):null},remove:id=>contentStore.remove('team',id)};
+const services={all:()=>contentStore.all('services'),create:x=>contentStore.save('services',{...x,id:x.id||`s_${Date.now()}`}),update:async(id,x)=>{const old=await contentStore.get('services',id);return old?contentStore.save('services',{...old,...x,id}):null},remove:id=>contentStore.remove('services',id)};
+const blog={all:()=>contentStore.all('blog'),create:x=>contentStore.save('blog',{...x,id:x.id||`b_${Date.now()}`}),update:async(id,x)=>{const old=await contentStore.get('blog',id);return old?contentStore.save('blog',{...old,...x,id}):null},remove:id=>contentStore.remove('blog',id)};
+async function permissions(){const r=await getPool().query('SELECT key,title,category,description,is_system AS system FROM permissions ORDER BY category,key');return r.rows}
+async function roles(){const r=await getPool().query(`SELECT r.key,r.title,r.is_system AS system,CASE WHEN r.permissions @> '["*"]'::jsonb THEN r.permissions ELSE COALESCE(jsonb_agg(rp.permission_key) FILTER (WHERE rp.permission_key IS NOT NULL),'[]'::jsonb) END AS permissions FROM roles r LEFT JOIN role_permissions rp ON rp.role_key=r.key GROUP BY r.key,r.title,r.is_system,r.permissions ORDER BY r.key`);return r.rows}
+async function createRole(x){if(!x.key||!x.title)throw Error('کلید و عنوان نقش الزامی است');const keys=[...new Set((x.permissions||[]).filter(Boolean))];const client=await getPool().connect();try{await client.query('BEGIN');const r=await client.query(`INSERT INTO roles(key,title,permissions,is_system) VALUES($1,$2,$3::jsonb,FALSE) RETURNING key,title,is_system AS system`,[x.key,x.title,JSON.stringify(keys)]);for(const key of keys) await client.query('INSERT INTO role_permissions(role_key,permission_key) VALUES($1,$2) ON CONFLICT DO NOTHING',[x.key,key]);await client.query('COMMIT');const out={...r.rows[0],permissions:keys};await analytics.log({role:'admin',action:'role_created',entity:'role',entityId:x.key,meta:{title:x.title,permissions:keys}});return out}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
+async function updateRole(key,x){const keys=x.permissions?([...new Set(x.permissions.filter(Boolean))]):null;const client=await getPool().connect();try{await client.query('BEGIN');const r=await client.query(`UPDATE roles SET title=COALESCE($2,title),permissions=COALESCE($3::jsonb,permissions),updated_at=NOW() WHERE key=$1 RETURNING key,title,is_system AS system`,[key,x.title,keys?JSON.stringify(keys):null]);if(!r.rowCount){await client.query('ROLLBACK');return null}if(keys){await client.query('DELETE FROM role_permissions WHERE role_key=$1',[key]);for(const permissionKey of keys) await client.query('INSERT INTO role_permissions(role_key,permission_key) VALUES($1,$2) ON CONFLICT DO NOTHING',[key,permissionKey])}await client.query('COMMIT');const out={...r.rows[0],permissions:keys||[]};await analytics.log({role:'admin',action:'role_updated',entity:'role',entityId:key,meta:{title:out.title,permissions:out.permissions}});return out}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
+async function deleteRole(key){const r=await getPool().query('DELETE FROM roles WHERE key=$1 AND is_system=FALSE RETURNING key',[key]);if(r.rowCount)await analytics.log({role:'admin',action:'role_deleted',entity:'role',entityId:key});return r.rowCount>0}
+async function dashboard(){const [c,po,te,co,users,enrollments,messages]=await Promise.all([contacts(),portfolio.all(),team.all(),require('../courses/courses.service').getAll(),auth.all(),learning.allEnrollments(),learning.messages()]);return{portfolio:po.length,team:te.length,contacts:c.length,courses:co.length,users:users.length,enrollments:enrollments.length,messages:messages.length,recentContacts:c.slice(0,5)}}
+async function contacts(){return require('../contact/contact.service').loadAll()} async function analyticsStats(){return analytics.stats()} async function auditLogs(){return analytics.logs()} async function subscriptionsAll(){return subscriptions.all()}
+async function ordersAll(){return subscriptions.allOrders()}
+async function updateOrderStatus(id,payload){if(payload.status==='paid')return subscriptions.markOrderPaid(id,payload.referenceId||null);throw Error('این نسخه فقط پرداخت سفارش را از طریق وضعیت paid نهایی می‌کند')}
+async function subscriptionsPlans(){return subscriptions.adminCoursePlans()}
+function updatePlan(courseId,key,payload){return subscriptions.updatePlan(courseId,key,payload)}
+function createPlan(courseId,payload){return subscriptions.createPlan(courseId,payload)}
+function deletePlan(courseId,key){return subscriptions.deletePlan(courseId,key)}
+async function reviews(){return await learning.allReviews()}
+async function updateReview(id,payload){return learning.updateReview(id,payload)}
+async function enrollmentDetails(){const users=await auth.all();return Promise.all((await learning.allEnrollments()).map(async e=>({...e,user:users.find(u=>u.id===e.userId)?(()=>{const u=users.find(u=>u.id===e.userId);return {id:u.id,name:u.name,email:u.email,role:u.role}})():null,course:await learning.course(e.courseId)})))}
+async function createUser(payload){return auth.createAdminUser(payload)}
+async function updateUser(id,payload){return auth.updateAdminUser(id,payload)}
+module.exports={siteSettings,portfolio,team,services,blog,contacts,dashboard,learning,users:()=>auth.all(),analyticsStats,auditLogs,subscriptionsAll,ordersAll,updateOrderStatus,subscriptionsPlans,updatePlan,createPlan,deletePlan,enrollmentDetails,reviews,updateReview,permissions,roles,createRole,updateRole,deleteRole,createUser,updateUser};
+--- backend/src/modules/admin/auth.controller.js
+const crypto=require('crypto');
+const auth=require('../auth/auth.service');
+function equal(a,b){const x=Buffer.from(String(a||''));const y=Buffer.from(String(b||''));return x.length===y.length&&crypto.timingSafeEqual(x,y)}
+exports.login=(req,res)=>{
+  const {password}=req.body||{};
+  const valid=process.env.ADMIN_PASSWORD_HASH?auth.verifyPassword(password,process.env.ADMIN_PASSWORD_HASH):equal(password,process.env.ADMIN_PASSWORD);
+  if(!valid)return res.status(401).json({success:false,message:'رمز عبور نادرست است'});
+  res.json({success:true,token:auth.signAdminToken(),expiresIn:8*60*60});
+};
+--- backend/src/modules/admin/auth.routes.js
+const express=require('express');const c=require('./auth.controller');const r=express.Router();r.post('/login',c.login);module.exports=r;--- backend/src/modules/admin/notifications.admin.js
+const {getPool}=require('../../infra/database');
+const loyalty=require('../loyalty/loyalty.service');
+const notifications=require('../notifications/notifications.service');
+async function accounts(){return loyalty.allAccounts()}
+async function tiers(){return loyalty.tiers()}
+async function adjust(id,points,description){const r=await getPool().query('SELECT id FROM users WHERE legacy_id=$1 OR id::text=$1 LIMIT 1',[String(id)]);if(!r.rowCount)throw Error('کاربر یافت نشد');return loyalty.adjustPoints(r.rows[0].id,points,description)}
+async function notificationList(status){return notifications.list({status})}
+async function notificationStats(){return notifications.stats()}
+module.exports={accounts,tiers,adjust,notificationList,notificationStats};
+--- backend/src/modules/auth/auth.routes.js
+const express=require('express');const s=require('./auth.service');const r=express.Router();
+const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;const usernameRe=/^[a-zA-Z0-9_\u0600-\u06FF.-]{3,40}$/;
+r.post('/register',async(req,res)=>{try{const {name,username,email,phone,password}=req.body||{};const un=String(username||'').trim().toLowerCase();const em=String(email||'').trim().toLowerCase();if(String(name||'').trim().length<2||!usernameRe.test(un)||!emailRe.test(em)||String(phone||'').trim().length<7||String(password||'').length<10)return res.status(400).json({success:false,message:'نام معتبر، نام کاربری معتبر، ایمیل معتبر، شماره تماس و رمز حداقل ۱۰ کاراکتری لازم است'});res.status(201).json({success:true,data:await s.register({name:String(name).trim(),username:un,email:em,phone:String(phone).trim(),password:String(password)})})}catch(e){res.status(409).json({success:false,message:e.message})}});
+r.post('/login',async(req,res,next)=>{try{const x=await s.login(req.body?.identifier||req.body?.username||req.body?.email,req.body?.password);if(!x)return res.status(401).json({success:false,message:'نام کاربری/ایمیل یا رمز عبور نادرست است'});res.json({success:true,data:x})}catch(e){next(e)}});
+r.get('/me',async(req,res,next)=>{try{const x=await s.me((req.headers.authorization||'').replace(/^Bearer\s+/,''));if(!x)return res.status(401).json({success:false});res.json({success:true,data:x})}catch(e){next(e)}});
+r.put('/profile',async(req,res,next)=>{try{const u=await s.me((req.headers.authorization||'').replace(/^Bearer\s+/,''));if(!u)return res.status(401).json({success:false});res.json({success:true,data:await s.updateProfile(u.id,req.body||{})})}catch(e){next(e)}});module.exports=r;
+--- backend/src/modules/auth/auth.service.js
+const crypto=require('crypto');
+const path=require('path');
+const {readJson}=require('../../utils/readJson');
+const {getPool}=require('../../infra/database');
+const analytics=require('../analytics/analytics.service');
+const file=path.join(__dirname,'..','..','data','users.json');
+const rolesFile=path.join(__dirname,'..','..','data','roles.json');
+
+const SCRYPT_N=16384, SCRYPT_R=8, SCRYPT_P=1, KEYLEN=32;
+function hashPassword(password){
+  const salt=crypto.randomBytes(16);
+  const derived=crypto.scryptSync(String(password),salt,KEYLEN,{N:SCRYPT_N,r:SCRYPT_R,p:SCRYPT_P,maxmem:64*1024*1024});
+  return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString('base64url')}$${derived.toString('base64url')}`;
+}
+function safeEqual(a,b){const aa=Buffer.from(String(a));const bb=Buffer.from(String(b));return aa.length===bb.length&&crypto.timingSafeEqual(aa,bb)}
+function verifyPassword(password,stored){
+  if(!stored)return false;
+  const parts=String(stored).split('$');
+  if(parts[0]==='scrypt'&&parts.length===6){
+    try{const [,n,r,p,salt,hash]=parts;const derived=crypto.scryptSync(String(password),Buffer.from(salt,'base64url'),KEYLEN,{N:Number(n),r:Number(r),p:Number(p),maxmem:64*1024*1024});return safeEqual(derived.toString('base64url'),hash)}catch{return false}
+  }
+  // Backward-compatible verification for v5/v6 records. Successful legacy logins are rehashed below.
+  try{return safeEqual(crypto.scryptSync(String(password),'codesazan-salt',32).toString('hex'),String(stored))}catch{return false}
+}
+const roleDefaults=()=>{try{return readJson(rolesFile)}catch{return[]}};
+async function seed(){
+  const pool=getPool(), users=readJson(file), roles=roleDefaults();
+  for(const r of roles){await pool.query(`INSERT INTO roles(key,title,permissions,is_system) VALUES($1,$2,$3::jsonb,$4) ON CONFLICT(key) DO NOTHING`,[r.key,r.title,JSON.stringify(r.permissions||[]),!!r.system]);}
+  const demoPassword=process.env.DEMO_PASSWORD||'';
+  const seeds=[['admin','admin@codesazan.local','مدیر سیستم','admin',demoPassword],['employee','employee@codesazan.local','کارمند نمونه','employee',demoPassword],['teacher','teacher@codesazan.local','مدرس نمونه','teacher',demoPassword],['team','team@codesazan.local','عضو تیم نمونه','team',demoPassword],['user','user@codesazan.local','کاربر نمونه','user',demoPassword]];
+  const seedDemo=String(process.env.SEED_DEMO_USERS||'false').toLowerCase()==='true';
+  if(seedDemo&&!demoPassword)throw new Error('DEMO_PASSWORD is required when SEED_DEMO_USERS=true');
+  const seedByUsername=new Map(seeds.map(x=>[x[0],x]));
+  const allUsers=seedDemo?[...users]:[];
+  if(seedDemo)for(const [username,email,name,role,password] of seeds){if(!allUsers.some(x=>x.username===username||x.email===email))allUsers.push({id:`u_${username}`,username,email,name,role,passwordHash:hashPassword(password)});}
+  for(const old of allUsers){
+    const seed=seedByUsername.get(old.username);const username=old.username||seed?.[0];if(!username)continue;
+    const email=old.email||seed?.[1]||`${username}@codesazan.local`;const name=old.name||seed?.[2]||username;const role=old.role||seed?.[3]||'user';
+    const passwordHash=old.passwordHash||(seed?hashPassword(seed[4]):hashPassword('ChangeMe123!'));const legacyId=old.id||`u_${username}`;
+    await pool.query(`INSERT INTO users(legacy_id,username,email,name,phone,password_hash,role_key,permissions,status,profile) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10::jsonb) ON CONFLICT(username) DO NOTHING`,[legacyId,username,email,name,old.phone||'',passwordHash,role,JSON.stringify(old.permissions||[]),old.status||'active',JSON.stringify(old.profile||{})]);
+  }
+  if(!seedDemo){
+    await pool.query(`UPDATE users SET status='suspended',suspension_reason='Demo account disabled in production',updated_at=NOW() WHERE (username IN ('admin','employee','teacher','team','user') OR email LIKE '%@codesazan.local') AND status='active'`);
+  }
+  const defaultPlans=[['free','رایگان',0,['دسترسی به دوره‌های رایگان','مطالب عمومی سایت','بدون هزینه'],true],['normal','عادی',1490000,['دوره‌های عادی','محتوای آموزشی ویژه','پشتیبانی استاندارد'],false],['vip','VIP',3490000,['همه امکانات عادی','دوره‌های VIP','پشتیبانی ویژه و مزایای VIP'],false]];
+  for(const [key,title,price,features,isFree] of defaultPlans)await pool.query(`INSERT INTO plans(key,title,price,features,is_free,active) VALUES($1,$2,$3,$4::jsonb,$5,TRUE) ON CONFLICT(key) DO NOTHING`,[key,title,price,JSON.stringify(features),isFree]);
+}
+async function findByIdentifier(identifier){const value=String(identifier||'').trim().toLowerCase();const r=await getPool().query('SELECT * FROM users WHERE LOWER(username)=LOWER($1) OR LOWER(email)=LOWER($1) LIMIT 1',[value]);return r.rows[0]||null}
+function publicUser(u){return u&&{id:u.legacy_id||u.id,username:u.username,name:u.name,email:u.email,phone:u.phone||'',role:u.role_key||u.role,permissions:u.permissions||[],status:u.status||'active',suspensionReason:u.suspension_reason||u.suspensionReason||'',suspendedUntil:u.suspended_until||u.suspendedUntil||null,profile:u.profile||{}}}
+function signClaims(claims,ttlSeconds=8*60*60){const now=Math.floor(Date.now()/1000);const payload=Buffer.from(JSON.stringify({...claims,iat:now,exp:now+ttlSeconds})).toString('base64url');const sig=crypto.createHmac('sha256',process.env.AUTH_SECRET).update(payload).digest('base64url');return `${payload}.${sig}`}
+function sign(u,ttl=8*60*60){return signClaims({id:u.id,legacyId:u.legacy_id||u.id,role:u.role_key||u.role,username:u.username,email:u.email},ttl)}
+function signAdminToken(ttl=8*60*60){return signClaims({id:'admin-env',role:'admin',username:'admin',permissions:['*'],type:'admin'},ttl)}
+function verifyToken(token){try{const [p,s]=String(token||'').split('.');if(!p||!s)return null;const good=crypto.createHmac('sha256',process.env.AUTH_SECRET).update(p).digest('base64url');if(!safeEqual(s,good))return null;const claims=JSON.parse(Buffer.from(p,'base64url').toString());if(!claims.exp||claims.exp<Math.floor(Date.now()/1000))return null;return claims}catch{return null}}
+async function register({name,username,email,phone,password}){const exists=await getPool().query('SELECT 1 FROM users WHERE LOWER(email)=LOWER($1) OR LOWER(username)=LOWER($2) LIMIT 1',[email,username]);if(exists.rowCount)throw new Error('نام کاربری یا ایمیل قبلاً ثبت شده است');const role=await getPool().query("SELECT permissions FROM roles WHERE key='user'");const r=await getPool().query(`INSERT INTO users(legacy_id,username,email,name,phone,password_hash,role_key,permissions,status,profile) VALUES($1,$2,$3,$4,$5,$6,'user',$7::jsonb,'active','{}'::jsonb) RETURNING *`,[`u_${crypto.randomUUID()}`,String(username).trim(),String(email).trim().toLowerCase(),name,phone,hashPassword(password),JSON.stringify(role.rows[0]?.permissions||['profile.edit','courses.view'])]);const u=r.rows[0];await analytics.log({userId:u.legacy_id,role:'user',action:'register',entity:'user',entityId:u.legacy_id});return {user:publicUser(u),token:sign(u)}}
+async function login(identifier,password){const u=await findByIdentifier(identifier);if(!u||!verifyPassword(password,u.password_hash))return null;if(u.status==='suspended')return {suspended:true,message:'حساب کاربری شما تعلیق شده است',reason:u.suspension_reason||'',until:u.suspended_until||null};if(!String(u.password_hash).startsWith('scrypt$'))await getPool().query('UPDATE users SET password_hash=$1,updated_at=NOW() WHERE id=$2',[hashPassword(password),u.id]);await getPool().query('UPDATE users SET last_login_at=NOW(),updated_at=NOW() WHERE id=$1',[u.id]);await analytics.log({userId:u.legacy_id,role:u.role_key,action:'login',entity:'user',entityId:u.legacy_id});return {user:publicUser(u),token:sign(u)}}
+async function me(token){const p=verifyToken(token);if(!p)return null;if(p.type==='admin')return {id:p.id,username:p.username,name:'مدیر سیستم',email:'',role:'admin',permissions:['*'],status:'active'};const r=await getPool().query(`SELECT u.*,r.permissions AS role_permissions,COALESCE((SELECT jsonb_agg(DISTINCT x.permission_key) FROM role_permissions x WHERE x.role_key=u.role_key),'[]'::jsonb) AS role_permission_keys FROM users u LEFT JOIN roles r ON r.key=u.role_key WHERE u.id=$1 OR u.legacy_id=$2 LIMIT 1`,[p.id,p.legacyId||p.id]);const u=r.rows[0];if(!u)return null;const direct=Array.isArray(u.permissions)?u.permissions:[];const role=Array.isArray(u.role_permission_keys)?u.role_permission_keys:(Array.isArray(u.role_permissions)?u.role_permissions:[]);return {...publicUser(u),permissions:[...new Set([...role,...direct])]}}
+async function all(){const r=await getPool().query('SELECT * FROM users ORDER BY created_at ASC');return r.rows.map(publicUser)}
+async function updateProfile(userId,payload){const r=await getPool().query('SELECT * FROM users WHERE legacy_id=$1 OR id::text=$1 LIMIT 1',[userId]);const u=r.rows[0];if(!u)return null;const profile={...(u.profile||{}),...(payload.profile||{})};const q=await getPool().query(`UPDATE users SET name=$1,phone=$2,email=$3,profile=$4::jsonb,updated_at=NOW() WHERE id=$5 RETURNING *`,[payload.name||u.name,payload.phone||u.phone,payload.email||u.email,JSON.stringify(profile),u.id]);await analytics.log({userId:u.legacy_id,role:u.role_key,action:'profile_update',entity:'user',entityId:u.legacy_id});return publicUser(q.rows[0])}
+async function createAdminUser(payload){
+ const name=String(payload.name||'').trim();
+ const username=String(payload.username||'').trim();
+ const email=String(payload.email||'').trim().toLowerCase();
+ const password=String(payload.password||'');
+ const role=String(payload.role||'user').trim();
+ if(name.length<2)throw Object.assign(new Error('نام کاربر الزامی است.'),{status:422});
+ if(username.length<3)throw Object.assign(new Error('نام کاربری باید حداقل ۳ کاراکتر باشد.'),{status:422});
+ if(!email||!email.includes('@'))throw Object.assign(new Error('ایمیل معتبر الزامی است.'),{status:422});
+ if(password.length<8)throw Object.assign(new Error('رمز عبور باید حداقل ۸ کاراکتر باشد.'),{status:422});
+ const pool=getPool();
+ const roleRow=await pool.query('SELECT key,permissions FROM roles WHERE key=$1 LIMIT 1',[role]);
+ if(!roleRow.rowCount)throw Object.assign(new Error('نقش انتخاب‌شده معتبر نیست.'),{status:422});
+ const exists=await pool.query('SELECT username,email FROM users WHERE LOWER(username)=LOWER($1) OR LOWER(email)=LOWER($2) LIMIT 1',[username,email]);
+ if(exists.rowCount)throw Object.assign(new Error('نام کاربری یا ایمیل قبلاً ثبت شده است.'),{status:409});
+ const direct=Array.isArray(payload.permissions)?payload.permissions:[];
+ const perms=direct.length?direct:(roleRow.rows[0].permissions||[]);
+ const r=await pool.query(`INSERT INTO users(legacy_id,username,email,name,phone,password_hash,role_key,permissions,status,profile) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10::jsonb) RETURNING *`,[`u_${crypto.randomUUID()}`,username,email,name,String(payload.phone||''),hashPassword(password),role,JSON.stringify(perms),payload.status==='suspended'?'suspended':'active',JSON.stringify(payload.profile||{})]);
+ const out=publicUser(r.rows[0]);
+ await analytics.log({userId:out.id,role:'admin',action:'admin_create_user',entity:'user',entityId:out.id,meta:{role:out.role}});
+ return out;
+}
+async function updateAdminUser(id,payload){
+ const r=await getPool().query('SELECT * FROM users WHERE legacy_id=$1 OR id::text=$1 LIMIT 1',[id]);
+ const u=r.rows[0];if(!u)return null;
+ const username=payload.username===undefined?u.username:String(payload.username||'').trim();
+ if(username.length<3)throw Object.assign(new Error('نام کاربری باید حداقل ۳ کاراکتر باشد.'),{status:422});
+ const duplicate=await getPool().query('SELECT 1 FROM users WHERE LOWER(username)=LOWER($1) AND id<>$2 LIMIT 1',[username,u.id]);
+ if(duplicate.rowCount)throw Object.assign(new Error('این نام کاربری قبلاً استفاده شده است.'),{status:409});
+ const profile={...(u.profile||{}),...(payload.profile||{})};
+ const password=payload.password===undefined?null:String(payload.password||'');
+ if(password!==null&&password.length>0&&password.length<8)throw Object.assign(new Error('رمز عبور جدید باید حداقل ۸ کاراکتر باشد.'),{status:422});
+ const passwordHash=password?hashPassword(password):u.password_hash;
+ const q=await getPool().query(`UPDATE users SET name=$1,username=$2,email=$3,phone=$4,password_hash=$5,role_key=$6,permissions=$7::jsonb,status=$8,suspension_reason=$9,suspended_until=$10,profile=$11::jsonb,updated_at=NOW() WHERE id=$12 RETURNING *`,[payload.name||u.name,username,payload.email===undefined?u.email:String(payload.email||'').trim().toLowerCase(),payload.phone===undefined?u.phone:String(payload.phone||''),passwordHash,payload.role||u.role_key,JSON.stringify(Array.isArray(payload.permissions)?payload.permissions:(u.permissions||[])),payload.status||u.status,payload.suspensionReason??u.suspension_reason??'',payload.suspendedUntil??u.suspended_until??null,JSON.stringify(profile),u.id]);
+ const out=publicUser(q.rows[0]);await analytics.log({userId:out.id,role:'admin',action:out.status==='suspended'?'user_suspended':'admin_update_user',entity:'user',entityId:out.id,meta:{role:out.role,usernameChanged:username!==u.username,passwordChanged:!!password}});return out}
+
+module.exports={seed,register,login,me,verify:verifyToken,all,createAdminUser,updateProfile,updateAdminUser,hashPassword,verifyPassword,signAdminToken};
+--- backend/src/modules/media/access.js
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const { getPool } = require('../../infra/database');
+const subscriptions = require('../subscriptions/subscriptions.service');
+const auth = require('../auth/auth.service');
+
+const MEDIA_DIR = process.env.MEDIA_DIR || '/app/media';
+const TTL = Math.max(300, Number(process.env.MEDIA_TOKEN_TTL_SECONDS || 7200));
+const secret = () => { if(!process.env.AUTH_SECRET) throw new Error('AUTH_SECRET is required'); return String(process.env.AUTH_SECRET); };
+
+function b64(value){return Buffer.from(JSON.stringify(value)).toString('base64url')}
+function sign(value){return crypto.createHmac('sha256', secret()).update(value).digest('base64url')}
+function issue(payload){const body=b64({...payload,exp:Math.floor(Date.now()/1000)+TTL});return `${body}.${sign(body)}`}
+function verify(token){
+  try{
+    const [body,mac]=String(token||'').split('.');
+    if(!body||!mac||!crypto.timingSafeEqual(Buffer.from(mac),Buffer.from(sign(body))))return null;
+    const payload=JSON.parse(Buffer.from(body,'base64url').toString('utf8'));
+    if(!payload.exp||payload.exp<Math.floor(Date.now()/1000))return null;
+    return payload;
+  }catch{return null}
+}
+
+function findSource(mediaId){
+  const root=path.resolve(MEDIA_DIR);
+  if(!fs.existsSync(root))return null;
+  const name=fs.readdirSync(root).find(x=>x.startsWith(`${mediaId}.`));
+  return name?{filename:name,file:path.join(root,name)}:null;
+}
+
+async function findLesson(filename){
+  const p=getPool();
+  const r=await p.query(`SELECT l.id,l.course_id AS "courseId",l.video_key AS "videoKey",c.title,c.course_type AS "courseType",c.access_plans AS "accessPlans",c.metadata
+    FROM lessons l JOIN courses c ON c.id=l.course_id
+    WHERE l.video_key=$1 OR l.video_key=$2 OR l.video_key LIKE $3
+    LIMIT 1`,[filename,`/media/${filename}`,`%${filename}`]);
+  return r.rows[0]||null;
+}
+
+async function resolveUser(req){
+  const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'').trim();
+  if(!token)return null;
+  return auth.me(token);
+}
+
+async function issueForRequest(req,mediaId){
+  const source=findSource(mediaId);
+  if(!source)throw Object.assign(new Error('فایل رسانه پیدا نشد'),{status:404});
+  const user=await resolveUser(req);
+  const lesson=await findLesson(source.filename);
+  if(!lesson)throw Object.assign(new Error('این فایل به هیچ جلسه‌ای متصل نیست'),{status:404});
+  if(user?.status==='suspended')throw Object.assign(new Error('حساب کاربری تعلیق شده است'),{status:403});
+  let access;
+  if(user?.role==='admin'||user?.permissions?.includes('*'))access={allowed:true,plan:'admin'};
+  else access=await subscriptions.accessForCourse(user?.legacy_id||user?.id,nullSafeCourse(lesson));
+  if(!access.allowed)throw Object.assign(new Error(access.message||'دسترسی پخش این ویدئو مجاز نیست'),{status:403});
+  const token=issue({mediaId,filename:source.filename,userId:user?.legacy_id||user?.id||null,lessonId:lesson.id,courseId:lesson.courseId});
+  return {token,expiresIn:TTL,lessonId:lesson.id,courseId:lesson.courseId,hlsUrl:`/media/hls/${mediaId}/master.m3u8?token=${encodeURIComponent(token)}`,sourceUrl:`/media/source/${encodeURIComponent(source.filename)}?token=${encodeURIComponent(token)}`};
+}
+function nullSafeCourse(lesson){return {id:lesson.courseId,courseType:lesson.courseType,allowedPlans:lesson.accessPlans||null}}
+
+function validateMediaToken(token,mediaId){const p=verify(token);return p&&String(p.mediaId)===String(mediaId)?p:null}
+
+module.exports={issueForRequest,validateMediaToken,findSource,findLesson,TTL};
+--- backend/src/modules/media/admin.service.js
+const fs = require('fs');
+const path = require('path');
+const { getPool } = require('../../infra/database');
+const { connectCache } = require('../../infra/cache');
+const jobs = require('./jobs');
+const analytics = require('../analytics/analytics.service');
+const QUEUE_KEY = 'codesazan:media:hls:queue';
+
+async function list() {
+  const pool = getPool();
+  const [jobsResult, lessonsResult] = await Promise.all([
+    pool.query(`SELECT mj.*, l.id AS lesson_id, l.title AS lesson_title, l.course_id AS lesson_course_id,
+      c.title AS course_title
+      FROM media_jobs mj
+      LEFT JOIN lessons l ON l.video_key = mj.id
+      LEFT JOIN courses c ON c.id = l.course_id
+      ORDER BY mj.created_at DESC`),
+    pool.query(`SELECT l.id, l.course_id AS "courseId", l.title, l.position, l.video_key AS "videoKey",
+      l.video_duration_seconds AS "durationSeconds", c.title AS "courseTitle"
+      FROM lessons l JOIN courses c ON c.id=l.course_id ORDER BY c.title,l.position,l.id`)
+  ]);
+  return {
+    jobs: jobsResult.rows.map(row => ({
+      ...row,
+      durationSeconds: row.duration_seconds,
+      lesson: row.lesson_id ? {id: row.lesson_id, title: row.lesson_title, courseId: row.lesson_course_id, courseTitle: row.course_title} : null
+    })),
+    lessons: lessonsResult.rows
+  };
+}
+
+async function retry(id, user) {
+  const job = await jobs.getJob(id);
+  if (!job) return null;
+  if (job.status !== 'failed') throw Error('فقط ویدئوی ناموفق قابل Retry است');
+  if (!fs.existsSync(path.join(process.env.MEDIA_DIR || '/app/media', path.basename(job.filename)))) {
+    throw Error('فایل اصلی ویدئو روی storage پیدا نشد');
+  }
+  const updated = await jobs.updateJob(id, {status:'queued', progress:0, quality:null, error:null, attempts:0, started_at:null, finished_at:null});
+  const redis = await connectCache();
+  await redis.set(`codesazan:media:hls:status:${id}`, JSON.stringify({id,status:'queued',progress:0,error:null,updatedAt:new Date().toISOString()}), {EX:604800});
+  await redis.rPush(QUEUE_KEY, JSON.stringify({id:job.id,filename:job.filename,originalName:job.original_name,mime:job.mime}));
+  await analytics.log({userId:user?.id,role:user?.role,action:'media_retry',entity:'media_job',entityId:id,meta:{filename:job.filename}});
+  return updated;
+}
+
+async function attach(id, lessonId, user) {
+  const job = await jobs.getJob(id);
+  if (!job) return null;
+  const pool = getPool();
+  const lesson = await pool.query('SELECT id,course_id,title FROM lessons WHERE id=$1',[lessonId]);
+  if (!lesson.rowCount) throw Error('درس انتخاب‌شده پیدا نشد');
+  const duration = job.duration_seconds == null ? null : Number(job.duration_seconds);
+  const r = await pool.query(`UPDATE lessons SET video_key=$1,video_duration_seconds=COALESCE($2,video_duration_seconds),updated_at=NOW() WHERE id=$3
+    RETURNING id,course_id AS "courseId",title,video_key AS "videoKey",video_duration_seconds AS "durationSeconds"`,[job.id,duration,lessonId]);
+  await analytics.log({userId:user?.id,role:user?.role,action:'media_attached_to_lesson',entity:'media_job',entityId:id,meta:{lessonId,courseId:lesson.rows[0].course_id}});
+  return r.rows[0];
+}
+
+async function remove(id, user) {
+  const job = await jobs.getJob(id);
+  if (!job) return false;
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('UPDATE lessons SET video_key=NULL,video_duration_seconds=NULL,updated_at=NOW() WHERE video_key=$1',[id]);
+    await client.query('DELETE FROM media_jobs WHERE id=$1',[id]);
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally { client.release(); }
+
+  const mediaRoot = path.resolve(process.env.MEDIA_DIR || '/app/media');
+  const source = path.join(mediaRoot, path.basename(job.filename));
+  const hls = path.join(mediaRoot, 'hls', id);
+  await fs.promises.rm(source, {force:true}).catch(()=>{});
+  await fs.promises.rm(hls, {recursive:true,force:true}).catch(()=>{});
+  await analytics.log({userId:user?.id,role:user?.role,action:'media_deleted',entity:'media_job',entityId:id,meta:{filename:job.filename}});
+  return true;
+}
+
+module.exports={list,retry,attach,remove};
+--- backend/src/modules/media/jobs.js
+const { getPool } = require('../../infra/database');
+
+async function createJob(data) {
+  const p = getPool();
+  const r = await p.query(`INSERT INTO media_jobs(id,filename,original_name,mime,status,progress,max_attempts)
+    VALUES($1,$2,$3,$4,'queued',0,$5)
+    ON CONFLICT(id) DO UPDATE SET filename=EXCLUDED.filename,original_name=EXCLUDED.original_name,mime=EXCLUDED.mime,updated_at=NOW()
+    RETURNING *`, [data.id,data.filename,data.originalName||null,data.mime||null,Number(data.maxAttempts||3)]);
+  return r.rows[0];
+}
+async function getJob(id){ const r=await getPool().query('SELECT * FROM media_jobs WHERE id=$1',[id]); return r.rows[0]||null; }
+async function updateJob(id,patch={}) {
+  const fields=Object.keys(patch); if(!fields.length)return getJob(id);
+  const values=[id]; const sets=[];
+  fields.forEach((key,i)=>{ values.push(patch[key]); sets.push(`${key}=$${i+2}`); });
+  sets.push('updated_at=NOW()');
+  const r=await getPool().query(`UPDATE media_jobs SET ${sets.join(',')} WHERE id=$1 RETURNING *`,values);
+  return r.rows[0]||null;
+}
+async function listRecoverable(){
+  const r=await getPool().query(`SELECT * FROM media_jobs WHERE status IN ('queued','processing') AND attempts < max_attempts ORDER BY created_at ASC`);
+  return r.rows;
+}
+module.exports={createJob,getJob,updateJob,listRecoverable};
+--- backend/src/modules/media/media.controller.js
+const fs=require('fs');
+const service=require('./media.service');
+const { enqueueHlsJob, getJobStatus }=require('./queue');
+
+async function upload(req,res,next){
+  try {
+    if(!req.file)return res.status(400).json({success:false,message:'فایل ویدئو ارسال نشده است'});
+    const data=service.saveUpload(req.file);
+    await enqueueHlsJob({id:data.id,filename:data.filename,originalName:data.originalName,mime:data.mime});
+    res.status(201).json({success:true,data:{...data,status:'queued',hlsUrl:`/media/hls/${data.id}/master.m3u8`}});
+  } catch(error){next(error)}
+}
+
+async function status(req,res,next){
+  try{
+    const data=await getJobStatus(req.params.id);
+    if(!data)return res.status(404).json({success:false,message:'وضعیت پردازش پیدا نشد'});
+    res.json({success:true,data});
+  }catch(error){next(error)}
+}
+
+function stream(req,res){const file=service.filePath(req.params.filename);if(!fs.existsSync(file))return res.status(404).json({success:false,message:'فایل پیدا نشد'});const stat=fs.statSync(file);const size=stat.size;const range=req.headers.range;const ext=req.params.filename.toLowerCase().split('.').pop();const mime=ext==='webm'?'video/webm':ext==='ogg'?'video/ogg':'video/mp4';res.setHeader('Accept-Ranges','bytes');res.setHeader('Content-Type',mime);if(!range){res.setHeader('Content-Length',size);return fs.createReadStream(file).pipe(res)}const [startText,endText]=range.replace(/bytes=/,'').split('-');const start=parseInt(startText,10)||0;const end=endText?Math.min(parseInt(endText,10),size-1):size-1;if(start>=size||start>end)return res.status(416).set('Content-Range',`bytes */${size}`).end();res.status(206).set({'Content-Range':`bytes ${start}-${end}/${size}`,'Content-Length':end-start+1}).end(fs.createReadStream(file,{start,end}))}
+
+module.exports={upload,stream,status};
+--- backend/src/modules/media/media.routes.js
+const express=require('express');
+const path=require('path');
+const multer=require('multer');
+const fs=require('fs');
+const auth=require('../../middlewares/adminAuth');
+const requirePermission=auth.requirePermission;
+const c=require('./media.controller');
+const access=require('./access');
+const dir='/tmp/codesazan-uploads';fs.mkdirSync(dir,{recursive:true});
+const upload=multer({dest:dir,limits:{fileSize:Number(process.env.MEDIA_MAX_UPLOAD_BYTES||524288000)},fileFilter:(req,file,cb)=>{if(/^video\//.test(file.mimetype))cb(null,true);else cb(new Error('فقط فایل ویدئویی مجاز است'))}});
+const r=express.Router();
+const optionalAuth=async(req,res,next)=>{try{const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'').trim();if(token)req.adminUser=await require('../../modules/auth/auth.service').me(token);next()}catch(e){next(e)}};
+
+r.get('/access/:mediaId',optionalAuth,async(req,res,next)=>{try{const data=await access.issueForRequest(req,req.params.mediaId);res.json({success:true,data})}catch(e){next(e)}});
+
+async function serveHls(req,res,next){
+  try{
+    const payload=access.validateMediaToken(req.query.token,req.params.mediaId);
+    if(!payload)return res.status(401).end();
+    const mediaRoot=path.resolve(process.env.MEDIA_DIR||'/app/media');
+    const base=path.resolve(mediaRoot,'hls',req.params.mediaId);
+    const requested=req.params.quality==='master'?'master.m3u8':path.join(req.params.quality,req.params.file);
+    const target=path.resolve(base,requested);
+    if(!target.startsWith(base+path.sep)||!fs.existsSync(target))return res.status(404).end();
+    if(!target.toLowerCase().endsWith('.m3u8')){
+      res.set('Cache-Control','private, max-age=3600');
+      return res.sendFile(target);
+    }
+    let body=fs.readFileSync(target,'utf8');
+    const signed=encodeURIComponent(req.query.token);
+    body=body.split(/\r?\n/).map(line=>{
+      const trimmed=line.trim();
+      if(!trimmed||trimmed.startsWith('#'))return line;
+      if(/\.(m3u8|ts|m4s|mp4)$/i.test(trimmed))return `${trimmed}?token=${signed}`;
+      return line;
+    }).join('\n');
+    res.set({'Content-Type':'application/vnd.apple.mpegurl','Cache-Control':'private, no-store'}).send(body);
+  }catch(e){next(e)}
+}
+r.get('/hls/:mediaId/master.m3u8',(req,res,next)=>{req.params.quality='master';serveHls(req,res,next)});
+r.get('/hls/:mediaId/:quality/:file',serveHls);
+
+r.get('/source/:filename',async(req,res,next)=>{try{const source=access.findSource(path.basename(req.params.filename));if(!source)return res.status(404).end();const payload=access.validateMediaToken(req.query.token,source.filename.split('.')[0]);if(!payload)return res.status(401).end();return c.stream(req,res)}catch(e){next(e)}});
+r.post('/upload',auth,requirePermission('lessons.manage'),upload.single('file'),c.upload);
+r.get('/status/:id',auth,requirePermission('lessons.manage'),c.status);
+module.exports=r;
+--- backend/src/modules/media/media.service.js
+const fs=require('fs');
+const path=require('path');
+const crypto=require('crypto');
+const MEDIA_DIR=process.env.MEDIA_DIR||'/app/media';
+function safeName(name){return String(name||'video').replace(/[^a-zA-Z0-9._-]/g,'_').slice(-120)}
+function ensure(){fs.mkdirSync(MEDIA_DIR,{recursive:true})}
+function saveUpload(file){ensure();const ext=path.extname(file.originalname||'').toLowerCase()||'.bin';const id=crypto.randomUUID();const filename=`${id}${ext}`;const target=path.join(MEDIA_DIR,filename);fs.renameSync(file.path,target);return {id,filename,originalName:file.originalname,size:file.size,mime:file.mimetype,url:`/media/${filename}`}}
+function filePath(filename){const clean=path.basename(filename);return path.join(MEDIA_DIR,clean)}
+module.exports={MEDIA_DIR,safeName,saveUpload,filePath};
+--- backend/src/modules/media/queue.js
+const { connectCache } = require('../../infra/cache');
+const jobs = require('./jobs');
+const QUEUE_KEY = 'codesazan:media:hls:queue';
+const STATUS_PREFIX = 'codesazan:media:hls:status:';
+async function mirror(id,data){const redis=await connectCache();await redis.set(`${STATUS_PREFIX}${id}`,JSON.stringify(data),{EX:60*60*24*7});}
+async function setJobStatus(id,status,extra={}){const data={id,status,updatedAt:new Date().toISOString(),...extra};await mirror(id,data);return jobs.updateJob(id,{status,progress:Number(extra.progress??(status==='ready'?100:0)),quality:extra.quality||null,error:extra.error||null,hls_path:extra.hlsUrl||null,started_at:status==='processing'?new Date():undefined,finished_at:['ready','failed'].includes(status)?new Date():undefined});}
+async function enqueueHlsJob(job){await jobs.createJob(job);const redis=await connectCache();await setJobStatus(job.id,'queued',{filename:job.filename,originalName:job.originalName});await redis.rPush(QUEUE_KEY,JSON.stringify(job));}
+async function getJobStatus(id){const db=await jobs.getJob(id);if(db)return {...db,updatedAt:db.updated_at};const redis=await connectCache();const raw=await redis.get(`${STATUS_PREFIX}${id}`);return raw?JSON.parse(raw):null;}
+async function recoverJobs(){const redis=await connectCache();const rows=await jobs.listRecoverable();for(const row of rows){await redis.rPush(QUEUE_KEY,JSON.stringify({id:row.id,filename:row.filename,originalName:row.original_name,mime:row.mime,attempt:row.attempts}));}return rows.length;}
+module.exports={QUEUE_KEY,setJobStatus,enqueueHlsJob,getJobStatus,recoverJobs};
+--- backend/src/modules/siteSettings/siteSettings.routes.js
+const express=require('express');
+const s=require('./siteSettings.service');
+const r=express.Router();
+r.get('/',async(req,res,next)=>{try{res.json({success:true,data:await s.get()})}catch(e){next(e)}});
+module.exports=r;
+--- backend/src/modules/siteSettings/siteSettings.service.js
+const { getPool } = require('../../infra/database');
+const defaults={
+  siteName:'کدسازان',tagline:'توسعه نرم‌افزار، مشاوره فناوری و آموزش',logo:'',phone:'',email:'',address:'',website:'',instagram:'',telegram:'',about:'',
+  content:{
+    global:{home:'خانه',services:'خدمات',portfolio:'پورتفولیو',courses:'دوره‌ها',subscriptions:'اشتراک‌ها',blog:'وبلاگ',about:'تیم ما',contact:'تماس',login:'ثبت‌نام / ورود',cart:'سبد',panel:'پنل'},
+    home:{eyebrow:'توسعه نرم‌افزار · مشاوره فناوری · آموزش',title:'ایده شما را به محصولی',titleAccent:'آماده اجرا',description:'کدسازان تیمی از توسعه‌دهندگان و مشاوران فناوری است که وب‌سایت، اپلیکیشن و زیرساخت سازمان شما را طراحی، می‌سازد و آموزش می‌دهد.',primary:'شروع همکاری',secondary:'مشاهده نمونه‌کارها',servicesEyebrow:'خدمات ما',servicesTitle:'یک تیم، سه نقش: سازنده، مشاور، معلم',servicesDescription:'از ساخت محصول گرفته تا مشاوره فنی و آموزش تیم داخلی شما.',portfolioEyebrow:'نمونه‌کارها',portfolioTitle:'پروژه‌هایی که ساخته‌ایم',portfolioDescription:'نمونه‌ای از محصولاتی که برای کسب‌وکارهای مختلف طراحی و توسعه داده‌ایم.',processEyebrow:'روش کار',processTitle:'چهار گام تا تحویل محصول',quoteTitle:'آماده‌ایم پروژه بعدی را با هم شروع کنیم.',quoteText:'کدسازان نه‌تنها سایت ما را ساخت، بلکه تیم فنی داخلی‌مان را هم برای نگهداری آن آموزش داد.',quoteAttribution:'— مدیرعامل، دیجی‌بازار',stats1Value:'+70',stats1Label:'پروژه تحویل‌شده',stats2Value:'+900',stats2Label:'دانشجوی فارغ‌التحصیل',stats3Value:'9 سال',stats3Label:'سابقه فعالیت',stats4Value:'18',stats4Label:'متخصص در تیم',process1Title:'کشف و تحلیل',process1Text:'شناخت نیاز واقعی کسب‌وکار و تدوین نقشه‌راه فنی.',process2Title:'طراحی و معماری',process2Text:'طراحی رابط کاربری و معماری ماژولار قابل توسعه.',process3Title:'توسعه و تست',process3Text:'پیاده‌سازی اسپرینتی همراه با تست مستمر کیفیت.',process4Title:'استقرار و پشتیبانی',process4Text:'راه‌اندازی با Docker و پشتیبانی پس از تحویل.'},
+    about:{kicker:'THE PEOPLE BEHIND THE CODE',title:'تیمی که پشت محصول شما ایستاده',description:'توسعه‌دهندگان، طراحان و مهندسانی که از تحلیل ایده تا استقرار و پشتیبانی کنار شما هستند.',teamEyebrow:'اعضای تیم',teamTitle:'آدم‌ها، نه فقط رزومه‌ها',teamDescription:'با تیمی آشنا شوید که مسئولیت فنی و تجربه محصول شما را بر عهده می‌گیرد.',storyEyebrow:'داستان ما',storyTitle:'از یک تیم کوچک تا یک استودیو محصول',storyDescription:'کدسازان با تمرکز بر توسعه وب شروع کرد و به‌مرور تیم‌های طراحی، بک‌اند، زیرساخت و آموزش را کنار هم قرار داد.',timeline1Year:'1394',timeline1Text:'شروع فعالیت با تمرکز بر توسعه وب',timeline2Year:'1397',timeline2Text:'راه‌اندازی واحد آموزش',timeline3Year:'1400',timeline3Text:'افزودن مشاوره فناوری',timeline4Year:'1403',timeline4Text:'عبور از مرز ۷۰ پروژه تحویل‌شده'},
+    services:{title:'خدمات کدسازان',description:'از ساخت محصول نرم‌افزاری گرفته تا مشاوره فنی و آموزش تیم داخلی سازمان شما.',ctaTitle:'نمی‌دانید کدام خدمت را نیاز دارید؟',ctaDescription:'در یک جلسه مشاوره کوتاه، مسیر مناسب پروژه شما را با هم مشخص می‌کنیم.',ctaButton:'رزرو مشاوره رایگان'},
+    portfolio:{title:'نمونه‌کارها',description:'مروری بر پروژه‌هایی که تیم کدسازان برای مشتریان مختلف طراحی و توسعه داده است.',loading:'در حال بارگذاری نمونه‌کارها...',empty:'نمونه‌کاری در این دسته یافت نشد.',filterAll:'همه',filterWeb:'وب',filterMobile:'موبایل',filterCorporate:'شرکتی'},
+    courses:{title:'دوره‌های آموزشی',description:'مسیرهای آموزشی از مقدماتی تا پیشرفته، برای علاقه‌مندان به برنامه‌نویسی و تیم‌های فنی سازمان‌ها.',introEyebrow:'معرفی آکادمی کدسازان',introTitle:'مسیر یادگیری واقعی، از شروع تا ساخت پروژه',introDescription:'دوره‌ها با درس‌های مرحله‌ای، تمرین، پروژه و امکان ارتباط با مدرس طراحی شده‌اند. برای شروع، یک دوره رایگان برای مهمان‌ها در دسترس است و برای مسیرهای پیشرفته می‌توانید پلن مناسب خود را انتخاب کنید.',point1:'دوره رایگان برای مهمان',point2:'مسیرهای مقدماتی تا پیشرفته',point3:'تمرین و پروژه عملی',loading:'در حال بارگذاری دوره‌ها...'},
+    blog:{title:'وبلاگ کدسازان',description:'یادداشت‌های فنی و مشاوره‌ای تیم ما درباره توسعه نرم‌افزار، معماری و مسیر یادگیری برنامه‌نویسی.',loading:'در حال بارگذاری مقالات...'},
+    contact:{title:'تماس با کدسازان',description:'برای شروع پروژه، درخواست مشاوره یا ثبت‌نام در دوره‌ها، فرم زیر را پر کنید یا مستقیم تماس بگیرید.',addressLabel:'آدرس دفتر',addressValue:'تهران، خیابان کارگر شمالی، برج فناوری، طبقه ۶',phoneLabel:'تلفن',phoneValue:'021-88990011 | 0912-0000000',emailLabel:'ایمیل',emailValue:'hello@codesazan.dev',hoursLabel:'ساعات پاسخگویی',hoursValue:'شنبه تا چهارشنبه، ۹:۰۰ تا ۱۸:۰۰',formName:'نام و نام خانوادگی',formPhone:'شماره تماس',formEmail:'ایمیل (اختیاری)',formSubject:'موضوع',formSelect:'انتخاب کنید',formMessage:'پیام شما',formPlaceholder:'کمی درباره نیاز خود بنویسید...',formSubmit:'ارسال درخواست',formSending:'در حال ارسال...',formSuccess:'پیام شما با موفقیت ارسال شد.',formError:'ارسال پیام ناموفق بود. لطفاً دوباره تلاش کنید یا با شماره تماس بگیرید.'},
+    footer:{servicesTitle:'خدمات',companyTitle:'شرکت',contactTitle:'ارتباط',copyright:'© 1403 codesazan.dev — تمامی حقوق محفوظ است',tech:'Built with React · Node.js · Docker',services1:'توسعه وب',services2:'اپلیکیشن موبایل',services3:'مشاوره فناوری',companyAbout:'درباره ما',companyPortfolio:'نمونه‌کارها',companyBlog:'وبلاگ',contactLink:'تماس با ما',coursesLink:'دوره‌های آموزشی'}
+  }
+};
+async function get(){const r=await getPool().query("SELECT value FROM site_settings WHERE key='main'");return deepMerge(defaults,r.rows[0]?.value||{});}
+function deepMerge(base, extra){if(!extra||typeof extra!=='object')return base;const out={...base};for(const [k,v] of Object.entries(extra)){if(v&&typeof v==='object'&&!Array.isArray(v)&&base[k]&&typeof base[k]==='object'&&!Array.isArray(base[k]))out[k]=deepMerge(base[k],v);else out[k]=v;}return out;}
+async function update(payload){const v=deepMerge(await get(),payload||{});await getPool().query(`INSERT INTO site_settings(key,value) VALUES('main',$1::jsonb) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`,[JSON.stringify(v)]);return v;}
+module.exports={get,update};

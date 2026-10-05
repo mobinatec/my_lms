@@ -1,0 +1,163 @@
+[
+  {
+    "id": "c1",
+    "title": "دوره رایگان شروع برنامه‌نویسی وب",
+    "level": "مقدماتی",
+    "duration": "۶ هفته",
+    "format": "آنلاین",
+    "summary": "مسیر کامل شروع برنامه‌نویسی وب با پروژه عملی.",
+    "topics": [
+      "HTML5",
+      "CSS3",
+      "JavaScript",
+      "Git"
+    ],
+    "teacher": "مدرس نمونه",
+    "teacherId": "u2",
+    "plans": [
+      {
+        "key": "basic",
+        "title": "رایگان برای مهمان",
+        "price": "رایگان",
+        "features": [
+          "تمام درس‌های مقدماتی",
+          "بدون ثبت‌نام"
+        ],
+        "free": true,
+        "guestAllowed": true
+      },
+      {
+        "key": "pro",
+        "title": "حرفه‌ای",
+        "price": "۱٬۹۹۰٬۰۰۰ تومان",
+        "features": [
+          "تمام درس‌ها",
+          "پشتیبانی مدرس"
+        ]
+      },
+      {
+        "key": "vip",
+        "title": "VIP",
+        "price": "۳٬۴۹۰٬۰۰۰ تومان",
+        "features": [
+          "تمام درس‌ها",
+          "پشتیبانی خصوصی",
+          "جلسه منتورینگ"
+        ]
+      }
+    ],
+    "lessons": [
+      {
+        "id": "l1",
+        "title": "نقشه راه وب",
+        "duration": "18 دقیقه",
+        "video": "",
+        "free": true
+      },
+      {
+        "id": "l2",
+        "title": "HTML و ساختار صفحه",
+        "duration": "32 دقیقه",
+        "video": "",
+        "free": true
+      },
+      {
+        "id": "l3",
+        "title": "CSS مدرن",
+        "duration": "41 دقیقه",
+        "video": "",
+        "free": true
+      }
+    ],
+    "guestFree": true,
+    "courseType": "free",
+    "introduction": "دوره‌ای رایگان برای شروع یادگیری و ساخت اولین پروژه‌های واقعی.",
+    "introVideo": "",
+    "allowedPlans": [
+      "free",
+      "normal",
+      "vip"
+    ]
+  },
+  {
+    "id": "c2",
+    "title": "توسعه فرانت‌اند با React",
+    "level": "متوسط",
+    "duration": "۸ هفته",
+    "format": "آنلاین",
+    "summary": "ساخت رابط‌های واقعی، معماری کامپوننتی و اتصال API.",
+    "topics": [
+      "React",
+      "Router",
+      "State",
+      "API"
+    ],
+    "teacher": "مدرس نمونه",
+    "teacherId": "u2",
+    "plans": [
+      {
+        "key": "basic",
+        "title": "پایه",
+        "price": "۹۹۰٬۰۰۰ تومان"
+      },
+      {
+        "key": "pro",
+        "title": "حرفه‌ای",
+        "price": "۲٬۴۹۰٬۰۰۰ تومان"
+      },
+      {
+        "key": "vip",
+        "title": "VIP",
+        "price": "۴٬۲۹۰٬۰۰۰ تومان"
+      }
+    ],
+    "lessons": [],
+    "courseType": "paid",
+    "introduction": "دوره پروژه‌محور React برای ساخت رابط‌های حرفه‌ای و اتصال به API.",
+    "introVideo": "",
+    "allowedPlans": [
+      "normal",
+      "vip"
+    ]
+  },
+  {
+    "id": "c3",
+    "title": "توسعه بک‌اند با Node.js",
+    "level": "متوسط",
+    "duration": "۸ هفته",
+    "format": "آنلاین",
+    "summary": "طراحی API، احراز هویت و معماری سرویس‌های Node.js.",
+    "topics": [
+      "Node.js",
+      "Express",
+      "SQL",
+      "Authentication"
+    ],
+    "teacher": "مدرس نمونه",
+    "teacherId": "u2",
+    "plans": [
+      {
+        "key": "basic",
+        "title": "پایه",
+        "price": "۱٬۲۹۰٬۰۰۰ تومان"
+      },
+      {
+        "key": "pro",
+        "title": "حرفه‌ای",
+        "price": "۲٬۹۹۰٬۰۰۰ تومان"
+      },
+      {
+        "key": "vip",
+        "title": "VIP",
+        "price": "۴٬۹۹۰٬۰۰۰ تومان"
+      }
+    ],
+    "lessons": [],
+    "courseType": "vip",
+    "introduction": "مسیر پیشرفته بک‌اند برای طراحی API، احراز هویت و معماری سرویس‌های واقعی.",
+    "introVideo": "",
+    "allowedPlans": [
+      "vip"
+    ]
+  }
+]

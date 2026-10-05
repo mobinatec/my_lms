@@ -1,0 +1,62 @@
+[
+  {
+    "id": "audit_17907524482122fd47df9964db",
+    "userId": "u1",
+    "role": "admin",
+    "action": "login",
+    "entity": "user",
+    "entityId": "u1",
+    "meta": {},
+    "at": "2026-09-30T07:14:08.212Z"
+  },
+  {
+    "id": "audit_179075244825052e1ac3d053d4",
+    "userId": "u_employee",
+    "role": "employee",
+    "action": "login",
+    "entity": "user",
+    "entityId": "u_employee",
+    "meta": {},
+    "at": "2026-09-30T07:14:08.250Z"
+  },
+  {
+    "id": "audit_17907524482847dfc7001933e9",
+    "userId": "u2",
+    "role": "teacher",
+    "action": "login",
+    "entity": "user",
+    "entityId": "u2",
+    "meta": {},
+    "at": "2026-09-30T07:14:08.285Z"
+  },
+  {
+    "id": "audit_1790752448319ade06f05fb495",
+    "userId": "u_team",
+    "role": "team",
+    "action": "login",
+    "entity": "user",
+    "entityId": "u_team",
+    "meta": {},
+    "at": "2026-09-30T07:14:08.319Z"
+  },
+  {
+    "id": "audit_179075244835464758968d3fc9",
+    "userId": "u_user",
+    "role": "user",
+    "action": "login",
+    "entity": "user",
+    "entityId": "u_user",
+    "meta": {},
+    "at": "2026-09-30T07:14:08.354Z"
+  },
+  {
+    "id": "audit_1790752448390ae7406cfc308e",
+    "userId": "u1",
+    "role": "admin",
+    "action": "login",
+    "entity": "user",
+    "entityId": "u1",
+    "meta": {},
+    "at": "2026-09-30T07:14:08.390Z"
+  }
+]
